@@ -154,6 +154,35 @@ export class Signature {
         return originalUrl;
     }
 
+    public verifyWithCallback(
+        url: string,
+        {method, addr}: {
+            method?: string;
+            addr?: string;
+        } = {},
+        {blackholed, expired} : {
+            blackholed: () => void,
+            expired: () => void,
+        }
+    ): string {
+        const [urlWithoutSignature, sign] = this.extractSignature(url);
+        this.checkStringSignature(urlWithoutSignature, sign);
+        const [originalUrl, data] = this.extractSignatureData(urlWithoutSignature);
+
+        // check additional conditions
+        if (data.a && (!addr || data.a !== addr)) {
+            blackholed();
+        }
+        if (data.m && (!method || data.m.indexOf(method.toUpperCase()) == -1)) {
+            blackholed();
+        }
+        if (data.e && data.e < Math.ceil(+new Date()/1000)) {
+            expired();
+        }
+
+        return originalUrl;
+    }
+
     public verifier({blackholed, expired, addressReader}: VerifierMethodOptions = {}): RequestHandler {
         addressReader ??= req => req.socket.remoteAddress;
         return (req, res, next) => {

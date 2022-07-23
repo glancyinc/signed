@@ -211,4 +211,26 @@ describe('test1', function() {
             addr: '127.0.0.1',
         }) === 'http://localhost:8080');
     });
+
+    it('should verify with .verifyWithCallback method', () => {
+        const url = signature.sign('http://localhost:8080', {
+            method: ['get', 'post'],
+            addr: '127.0.0.1',
+        });
+
+        console.log(url);
+
+        assert(signature.verifyWithCallback(url, {
+            method: 'get',
+            addr: '127.0.0.1',
+        },
+        {
+            blackholed: () =>{
+                console.log('blackholed');
+            },
+            expired: () =>{
+                console.log('expired');
+            }
+        }) === 'http://localhost:8080');
+    });
 });
